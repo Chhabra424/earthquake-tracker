@@ -7,12 +7,12 @@ from google.oauth2 import service_account
 creds = service_account.Credentials.from_service_account_file("creds.json")
 client = bigquery.Client(credentials=creds, project=creds.project_id)
 
-# Fetch earthquake data
-url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
+# Fetch earthquake data from the last 24 hours
+url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
 response = requests.get(url)
 data = response.json()
 
-# Process data
+# Process data into a DataFrame
 rows = []
 for feature in data['features']:
     props = feature['properties']
@@ -30,9 +30,12 @@ for feature in data['features']:
 
 df = pd.DataFrame(rows)
 
-# Push to BigQuery
+# Show how many rows will be uploaded
+print(f"Uploading {len(df)} rows to BigQuery...")
+
+# Push to BigQuery (append mode)
 table_id = f"{creds.project_id}.earthquake_data.global_quakes"
-job = client.load_table_from_dataframe(df, table_id)
+job = client.load_table_from_dataframe(df, table_id, if_exists="append")
 job.result()
 
-print("✅ Earthquake data uploaded to BigQuery.")
+print("✅ Earthquake data uploaded to BigQuery successfully.")
