@@ -21,14 +21,26 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install --upgrade setuptools wheel
           pip install -r requirements.txt
+          pip install pyarrow
 
-      - name: Run script
+      - name: Create creds.json from secret
         env:
           GCP_CREDS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
           echo "$GCP_CREDS" | tr -d '\r' > creds.json
-          python main.py
+          ls -l creds.json  # optional: verify it was created
+
+      - name: Run Earthquake Tracker
+        run: python main.py
+
+      - name: Upload creds.json artifact (optional)
+        uses: actions/upload-artifact@v3
+        with:
+          name: creds-json
+          path: creds.json
+
 
 
 
