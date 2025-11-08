@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
+from google.cloud.bigquery import LoadJobConfig
 
 # Load credentials
 creds = service_account.Credentials.from_service_account_file("creds.json")
@@ -35,7 +36,8 @@ print(f"Uploading {len(df)} rows to BigQuery...")
 
 # Push to BigQuery (append mode)
 table_id = f"{creds.project_id}.earthquake_data.global_quakes"
-job = client.load_table_from_dataframe(df, table_id, if_exists="append")
+job_config = LoadJobConfig(write_disposition="WRITE_APPEND")  # append new rows
+job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
 job.result()
 
 print("✅ Earthquake data uploaded to BigQuery successfully.")
